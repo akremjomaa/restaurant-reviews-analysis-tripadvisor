@@ -39,34 +39,3 @@ def init_selenium_driver(chromedriver_path):
     driver = webdriver.Chrome(service=service, options=options)
     return driver
 
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-
-def login_to_tripadvisor(driver, email, password):
-    """
-    Automatisation de la connexion à TripAdvisor.
-    """
-    try:
-        # Aller à la page de connexion
-        login_url = "https://www.tripadvisor.fr/Settings-captcha"
-        driver.get(login_url)
-        time.sleep(7)  # Attends le chargement de la page
-
-        # Trouver le champ e-mail
-        email_input = driver.find_element(By.ID, "regSignIn.email")
-        email_input.clear()
-        email_input.send_keys(email)
-
-        # Trouver le champ mot de passe
-        password_input = driver.find_element(By.ID, "regSignIn.password")
-        password_input.clear()
-        password_input.send_keys(password)
-
-        # Soumettre le formulaire
-        password_input.send_keys(Keys.RETURN)
-        time.sleep(5)  # Attends que la connexion soit complétée
-
-        print("Connexion réussie.")
-    except Exception as e:
-        print(f"Erreur lors de la connexion : {e}")

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from config import BASE_URL, MAX_RESTAURANTS, MIN_REVIEWS, CHROMEDRIVER_PATH
 from script import scrape_first_restaurant
-from utils import get_html_with_selenium, init_selenium_driver, login_to_tripadvisor
+from utils import get_html_with_selenium, init_selenium_driver
 import json
 
 def parse_restaurant_details(url, driver):
@@ -86,27 +86,6 @@ def save_to_json(data, filename):
 def main():
 
     driver = init_selenium_driver(CHROMEDRIVER_PATH)
-    try:
-        # Tes identifiants
-        email = "akrem.jomaa@univ-lyon2.fr"
-        password = "qm_XuVq5*L8pg3W"
-
-        print("Connexion à TripAdvisor...")
-        login_to_tripadvisor(driver, email, password)
-
-        print("Chargement de la page...")
-        html = get_html_with_selenium(BASE_URL, driver)
-
-        print("Extraction des informations...")
-        restaurant = scrape_first_restaurant(html)
-
-        if restaurant:
-            print("Informations du premier restaurant :")
-            print(restaurant)
-        else:
-            print("Aucun restaurant trouvé.")
-    finally:
-        driver.quit()
         
     print("Démarrage du scraping...")
     driver = init_selenium_driver(CHROMEDRIVER_PATH)

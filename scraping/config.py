@@ -12,4 +12,3 @@ CHROMEDRIVER_PATH = "chromedriver/chromedriver.exe"
 
 
 
-#qm_XuVq5*L8pg3W
