@@ -1,0 +1,4 @@
+# scraping libraries
+beautifulsoup4
+requests
+lxml
