@@ -10,7 +10,7 @@ venv/
 *.log
 
 # Ignorer les données brutes
-data/raw/
+data/
 
 # Ignorer les fichiers temporaires de l'éditeur
 .vscode/

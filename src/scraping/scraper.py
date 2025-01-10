@@ -42,8 +42,8 @@ def main():
     base_url = "https://www.tripadvisor.fr/Restaurants-g187265-oa0-Lyon_Rhone_Auvergne_Rhone_Alpes.html"
 
       # Chemins des fichiers de sauvegarde
-    urls_file = "data/raw/restaurant_urls_v3.json"
-    data_file = "data/raw/top_15_restaurants_v3.json"
+    urls_file = "data/raw/top_restaurants_urls.json"
+    data_file = "data/raw/top_restaurants.json"
 
     # Scraper les URLs des restaurants
     print("Début du scraping des URLs des restaurants...")

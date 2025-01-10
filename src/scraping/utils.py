@@ -59,11 +59,10 @@ def extract_manager_response(review):
     """
     # Recherche du div contenant la réponse
     response_div = review.find("div", class_="csNQI PJ")
-    if response_div:  # Vérifie si la div existe
+    if response_div:  
         response_text_span = response_div.find("span", class_="JguWG")
-        if response_text_span:  # Vérifie si le span existe
+        if response_text_span: 
             return response_text_span.text.strip()
-    # Si aucune réponse n'est trouvée
     return "Aucune réponse"
 
 def scrape_modal_details(soup):
@@ -78,7 +77,7 @@ def scrape_modal_details(soup):
     sections = soup.find_all("div", class_="Wf")
     for section in sections:
         # Titre de la section
-        title = section.find("div")  # Cherche le titre de manière générique
+        title = section.find("div")
         if title:
             title_text = title.text.strip()
             # Valeur associée à la section
@@ -165,7 +164,7 @@ def scrape_reviews(base_url):
 
                     # Pause avant de passer à la page suivante
                     time.sleep(random.uniform(3, 7))
-                    break  # Sortir du retry loop
+                    break  
 
                 elif response.status_code == 403:  # Bloqué par le serveur
                     delay = min(base_delay * (2 ** retries), max_delay) + random.uniform(0, 3)
@@ -173,7 +172,7 @@ def scrape_reviews(base_url):
                     time.sleep(delay)
                     retries += 1
 
-                else:  # Autre erreur HTTP
+                else:   # Autre erreur HTTP
                     print(f"Erreur HTTP {response.status_code}. Arrêt du scraping pour cette page.")
                     retries += 1
                     break

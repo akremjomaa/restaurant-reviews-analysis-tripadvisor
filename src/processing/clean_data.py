@@ -1,96 +1,85 @@
 import json
-import pandas as pd
-from datetime import datetime
+from typing import List, Dict
 
 
-def rename_keys(data, rename_map):
+def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
     """
-    Renomme les clés spécifiées dans le dictionnaire ou les éléments d'une liste.
-    :param data: Dictionnaire ou liste contenant les données JSON.
-    :param rename_map: Dictionnaire de correspondance {ancienne_clé: nouvelle_clé}.
-    :return: Données avec les clés renommées.
+    Prétraite les données des restaurants pour ajuster les noms des attributs et les types de données.
+    :param data: Liste de dictionnaires représentant les données des restaurants.
+    :return: Liste de dictionnaires avec les noms d'attributs et les types mis à jour.
     """
-    if isinstance(data, dict):
-        renamed_data = {}
-        for key, value in data.items():
-            new_key = rename_map.get(key, key)  # Renomme la clé si elle est dans le rename_map
-            renamed_data[new_key] = rename_keys(value, rename_map)
-        return renamed_data
-    elif isinstance(data, list):
-        return [rename_keys(item, rename_map) for item in data]
-    else:
-        return data  
+    def convert_price_range(price_range: str) -> str:
+        """
+        Convertit une plage de prix en un format normalisé (par ex., "25.00-30.00").
+        :param price_range: Plage de prix brute sous forme de chaîne.
+        :return: Plage de prix normalisée sous forme de chaîne.
+        """
+        try:
+            return price_range.replace("\u202f", "").replace(",", ".").replace("€", "").strip()
+        except Exception:
+            return price_range
 
+    def convert_reviews(reviews: List[Dict]) -> List[Dict]:
+        """
+        Convertit les types de données des avis et standardise les formats.
+        :param reviews: Liste de dictionnaires représentant les avis bruts.
+        :return: Liste de dictionnaires représentant les avis traités.
+        """
+        for review in reviews:
+            review["contributions"] = int(review.get("contributions", 0))
+            review["rating"] = float(review.get("rating", 0))
+            review["review_date"] = review.get("review_date", "").replace("Rédigé le ", "").strip()
+        return reviews
 
-def preprocess_restaurant_data(json_file):
-    """
-    Préprocesser les données brutes JSON en DataFrame Pandas.
-    """
-    with open(json_file, 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)
+    # Mapping des noms des attributs
+    attribute_mapping = {
+        "name": "name",
+        "address": "address",
+        "reviews_count": "reviews_count",
+        "rating": "overall_rating",
+        "ranking": "ranking",
+        "total_restaurants": "total_restaurants",
+        "Cuisine": "cuisine_rating",
+        "Service": "service_rating",
+        "Rapport qualité-prix": "value_rating",
+        "Ambiance": "ambiance_rating",
+        "FOURCHETTE DE PRIX": "price_range",
+        "CUISINES": "cuisines",
+        "Régimes spéciaux": "special_diets",
+        "Repas": "meals",
+        "FONCTIONNALITÉS": "features",
+        "reviews": "reviews"
+    }
 
-    restaurant_data = []
-    reviews_data = []
+    processed_data = []
+    for restaurant in data:
+        processed_restaurant = {}
+        for key, value in restaurant.items():
+            new_key = attribute_mapping.get(key, key) 
+            if new_key == "price_range" and isinstance(value, str):
+                processed_restaurant[new_key] = convert_price_range(value)
+            elif new_key == "overall_rating" and isinstance(value, str):
+                processed_restaurant[new_key] = float(value.replace(",", "."))
+            elif new_key in ["cuisine_rating", "service_rating", "value_rating", "ambiance_rating"]:
+                processed_restaurant[new_key] = float(value) if value is not None else None
+            elif new_key in ["reviews_count", "ranking", "total_restaurants"]:
+                processed_restaurant[new_key] = int(value) if value is not None else None
+            elif new_key == "reviews":
+                processed_restaurant[new_key] = convert_reviews(value)
+            else:
+                processed_restaurant[new_key] = value
+        processed_data.append(processed_restaurant)
 
-    for restaurant in raw_data:
-        # Nettoyage des colonnes principales
-        name = restaurant.get("name", "Inconnu")
-        address = restaurant.get("address", "Inconnu")
-        reviews_count = restaurant.get("reviews_count", 0)
-        rating = float(restaurant["rating"].replace(",", ".")) if restaurant.get("rating") else None
-        ranking = restaurant.get("ranking", None)
-        total_restaurants = restaurant.get("total_restaurants", None)
+    return processed_data
 
-        # Conversion des textes en listes pour standardisation
-        cuisines = restaurant.get("CUISINES", "").split(", ") if restaurant.get("CUISINES") else []
-        special_diets = restaurant.get("Régimes spéciaux", "").split(", ") if restaurant.get("Régimes spéciaux") else []
-        meals = restaurant.get("Repas", "").split(", ") if restaurant.get("Repas") else []
+# Lecture des données brutes depuis le fichier JSON
 
-        # Stockage des données principales
-        restaurant_data.append({
-            "name": name,
-            "address": address,
-            "reviews_count": reviews_count,
-            "rating": rating,
-            "ranking": ranking,
-            "total_restaurants": total_restaurants,
-            "cuisines": cuisines,
-            "special_diets": special_diets,
-            "meals": meals
-        })
+with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
+    raw_data = json.load(file)
 
-        # Prétraitement des avis
-        for review in restaurant.get("reviews", []):
-            review_date = review.get("review_date", "").replace("Rédigé le ", "").strip()
-            review_date = datetime.strptime(review_date, "%d %B %Y").strftime("%Y-%m-%d") if review_date else None
-            review_text = review.get("review_text", "")
-            sentiment = "positif" if "excellent" in review_text.lower() or "magnifique" in review_text.lower() else \
-                        "négatif" if "déception" in review_text.lower() or "mauvais" in review_text.lower() else \
-                        "neutre"
+# Prétraitement des données
+processed_data = preprocess_restaurant_data(raw_data)
 
-            reviews_data.append({
-                "restaurant_name": name,
-                "author": review.get("author", "Anonyme"),
-                "contributions": review.get("contributions", 0),
-                "rating": float(review.get("rating", 0)),
-                "title": review.get("title", ""),
-                "review_text": review_text,
-                "review_date": review_date,
-                "manager_response": review.get("manager_response", "Aucune réponse"),
-                "sentiment": sentiment,
-                "text_length": len(review_text)
-            })
-
-    # Convertir en DataFrame pour analyse et stockage
-    df_restaurants = pd.DataFrame(restaurant_data)
-    df_reviews = pd.DataFrame(reviews_data)
-
-    return df_restaurants, df_reviews
-
-
-# json_file = "data/raw/top_15_restaurants.json"
-# df_restaurants, df_reviews = preprocess_restaurant_data(json_file)
-
-# # Sauvegarder les données prétraitées
-# df_restaurants.to_csv("data/processed/restaurants.csv", index=False, encoding="utf-8")
-# df_reviews.to_csv("data/processed/reviews.csv", index=False, encoding="utf-8")
+# Sauvegarde des données prétraitées dans un fichier JSON
+with open("data/processed/top_restaurants_processed.json", "w", encoding="utf-8") as file:
+    json.dump(processed_data, file, ensure_ascii=False, indent=4)
