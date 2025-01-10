@@ -1,18 +1,55 @@
 import json
 from typing import List, Dict
+from geopy.geocoders import Nominatim
+from geopy.exc import GeopyError
+import time
 
+# Initialisation du géolocalisateur
+geolocator = Nominatim(user_agent="restaurant_locator")
+
+def get_coordinates(address: str, name: str) -> Dict[str, float]:
+    """
+    Obtenir les coordonnées GPS d'une adresse. Si l'adresse échoue, tente avec le nom du restaurant.
+    :param address: Adresse complète.
+    :param name: Nom du restaurant.
+    :return: Dictionnaire contenant latitude et longitude.
+    """
+    retries = 3  # Nombre de tentatives
+    delay = 2  # Délai initial entre les tentatives
+
+    for attempt in range(retries):
+        try:
+            # Essayer avec l'adresse
+            location = geolocator.geocode(address, timeout=10)
+            if location:
+                return {"latitude": location.latitude, "longitude": location.longitude}
+
+            # Si l'adresse échoue, tenter avec le nom du restaurant
+            print(f"Adresse échouée, tentative avec le nom du restaurant : {name}")
+            location = geolocator.geocode(name, timeout=10)
+            if location:
+                return {"latitude": location.latitude, "longitude": location.longitude}
+
+        except GeopyError as e:
+            print(f"Tentative {attempt + 1}/{retries} échouée : {e}")
+            time.sleep(delay)
+            delay *= 2  # Double le délai entre les tentatives
+
+    # Si toutes les tentatives échouent
+    print(f"Échec pour l'adresse : {address} et le nom : {name}. Aucune coordonnée trouvée.")
+    return {"latitude": None, "longitude": None}
 
 def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
     """
-    Prétraite les données des restaurants pour ajuster les noms des attributs et les types de données.
-    :param data: Liste de dictionnaires représentant les données des restaurants.
-    :return: Liste de dictionnaires avec les noms d'attributs et les types mis à jour.
+    Prétraiter les données des restaurants pour ajuster les noms des attributs et les types.
+    :param data: Liste des dictionnaires représentant les données des restaurants.
+    :return: Liste des dictionnaires avec les attributs et types normalisés.
     """
     def convert_price_range(price_range: str) -> str:
         """
-        Convertit une plage de prix en un format normalisé (par ex., "25.00-30.00").
-        :param price_range: Plage de prix brute sous forme de chaîne.
-        :return: Plage de prix normalisée sous forme de chaîne.
+        Convertir une fourchette de prix en une chaîne normalisée.
+        :param price_range: Chaîne brute de la fourchette de prix.
+        :return: Chaîne de prix normalisée.
         """
         try:
             return price_range.replace("\u202f", "").replace(",", ".").replace("€", "").strip()
@@ -21,9 +58,9 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
 
     def convert_reviews(reviews: List[Dict]) -> List[Dict]:
         """
-        Convertit les types de données des avis et standardise les formats.
-        :param reviews: Liste de dictionnaires représentant les avis bruts.
-        :return: Liste de dictionnaires représentant les avis traités.
+        Convertir les types des données des avis et standardiser les formats.
+        :param reviews: Liste des avis bruts.
+        :return: Liste des avis traités.
         """
         for review in reviews:
             review["contributions"] = int(review.get("contributions", 0))
@@ -31,7 +68,6 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
             review["review_date"] = review.get("review_date", "").replace("Rédigé le ", "").strip()
         return reviews
 
-    # Mapping des noms des attributs
     attribute_mapping = {
         "name": "name",
         "address": "address",
@@ -55,7 +91,7 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
     for restaurant in data:
         processed_restaurant = {}
         for key, value in restaurant.items():
-            new_key = attribute_mapping.get(key, key) 
+            new_key = attribute_mapping.get(key, key)
             if new_key == "price_range" and isinstance(value, str):
                 processed_restaurant[new_key] = convert_price_range(value)
             elif new_key == "overall_rating" and isinstance(value, str):
@@ -72,6 +108,22 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
 
     return processed_data
 
+def add_coordinates_to_restaurants(restaurants: List[Dict]) -> List[Dict]:
+    """
+    Ajoute les coordonnées GPS aux données des restaurants.
+    :param restaurants: Liste de dictionnaires représentant les restaurants.
+    :return: Liste de restaurants avec coordonnées ajoutées.
+    """
+    for restaurant in restaurants:
+        address = restaurant.get("address", "")
+        name = restaurant.get("name", "")
+        coordinates = get_coordinates(address, name)
+
+        restaurant["latitude"] = coordinates["latitude"]
+        restaurant["longitude"] = coordinates["longitude"]
+
+    return restaurants
+
 # Lecture des données brutes depuis le fichier JSON
 
 with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
@@ -80,6 +132,9 @@ with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
 # Prétraitement des données
 processed_data = preprocess_restaurant_data(raw_data)
 
+# Ajout des coordonnées GPS
+restaurants_with_coordinates = add_coordinates_to_restaurants(processed_data)
+
 # Sauvegarde des données prétraitées dans un fichier JSON
 with open("data/processed/top_restaurants_processed.json", "w", encoding="utf-8") as file:
-    json.dump(processed_data, file, ensure_ascii=False, indent=4)
+    json.dump(restaurants_with_coordinates, file, ensure_ascii=False, indent=4)
