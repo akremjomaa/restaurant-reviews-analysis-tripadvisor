@@ -124,9 +124,34 @@ def add_coordinates_to_restaurants(restaurants: List[Dict]) -> List[Dict]:
 
     return restaurants
 
+def split_address(data):
+    """
+    Divise le champ 'address' d'une liste de dictionnaires en 'street', 'postal_code', 'city', et 'country'.
+    
+    :param data: Liste de dictionnaires contenant un champ 'address'.
+    :return: Liste de dictionnaires mise à jour.
+    """
+    for item in data:
+        try:
+            street, postal_city = item['address'].split(',', 1)
+            postal_code, city_country = postal_city.strip().split(' ', 1)
+            city, country = city_country.rsplit(' ', 1)
+            item['street'] = street.strip()
+            item['postal_code'] = postal_code.strip()
+            item['city'] = city.strip()
+            item['country'] = country.strip()
+        except ValueError:
+            item['street'] = item['address']
+            item['postal_code'] = None
+            item['city'] = None
+            item['country'] = None
+        del item['address']  # Supprime le champ 'address' original
+    return data
+
+
 # Lecture des données brutes depuis le fichier JSON
 
-with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
+with open("top_restaurants.json", "r", encoding="utf-8") as file:
     raw_data = json.load(file)
 
 # Prétraitement des données
@@ -135,6 +160,9 @@ processed_data = preprocess_restaurant_data(raw_data)
 # Ajout des coordonnées GPS
 restaurants_with_coordinates = add_coordinates_to_restaurants(processed_data)
 
+#Séparation des adresses
+restaurants_final = split_address(restaurants_with_coordinates)
+
 # Sauvegarde des données prétraitées dans un fichier JSON
-with open("data/processed/top_restaurants_processed.json", "w", encoding="utf-8") as file:
-    json.dump(restaurants_with_coordinates, file, ensure_ascii=False, indent=4)
+with open("top_restaurants_processed.json", "w", encoding="utf-8") as file:
+    json.dump(restaurants_final, file, ensure_ascii=False, indent=4)
