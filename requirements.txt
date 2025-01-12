@@ -5,3 +5,6 @@ lxml
 geopy
 streamlit
 plotly
+streamlit-option-menu
+pandas
+streamlit-aggrid
