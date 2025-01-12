@@ -9,9 +9,6 @@ venv/
 # Ignorer les fichiers de logs
 *.log
 
-# Ignorer les données brutes
-data/
-
 # Ignorer les fichiers temporaires de l'éditeur
 .vscode/
 .idea/

@@ -151,7 +151,7 @@ def split_address(data):
 
 # Lecture des données brutes depuis le fichier JSON
 
-with open("top_restaurants.json", "r", encoding="utf-8") as file:
+with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
     raw_data = json.load(file)
 
 # Prétraitement des données
@@ -164,5 +164,5 @@ restaurants_with_coordinates = add_coordinates_to_restaurants(processed_data)
 restaurants_final = split_address(restaurants_with_coordinates)
 
 # Sauvegarde des données prétraitées dans un fichier JSON
-with open("top_restaurants_processed.json", "w", encoding="utf-8") as file:
+with open("data/processed/top_restaurants_processed.json", "w", encoding="utf-8") as file:
     json.dump(restaurants_final, file, ensure_ascii=False, indent=4)
