@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder, DataReturnMode
-
+import plotly.express as px
 
 def explore_restaurants_interface(connection):
     """
@@ -10,7 +10,7 @@ def explore_restaurants_interface(connection):
     """
     # Récupération des données des restaurants
     query_restaurants = """
-    SELECT *
+    SELECT id_restaurant, name, street, postal_code, city, country, overall_rating, ranking , cuisine_rating, service_rating, qualite_prix_rating, ambiance_rating, price_range
     FROM restaurants
     """
     restaurants = pd.read_sql_query(query_restaurants, connection)
@@ -32,11 +32,77 @@ def explore_restaurants_interface(connection):
     )
     restaurants["real_reviews_count"] = restaurants["real_reviews_count"].fillna(0).astype(int)
 
-    # Titre de la section
-    st.markdown("## 🌟 Explorer les Restaurants")
+    # Récupération des dates des avis
+    query_review_dates = """
+    SELECT MIN(review_date) AS min_date, MAX(review_date) AS max_date
+    FROM reviews
+    """
+    review_dates = pd.read_sql_query(query_review_dates, connection)
+    min_date = review_dates["min_date"].iloc[0]
+    max_date = review_dates["max_date"].iloc[0]
 
+    # Récupérer les cuisines disponibles
+    query_cuisines = """
+    SELECT DISTINCT name FROM cuisines
+    """
+    cuisines = pd.read_sql_query(query_cuisines, connection)["name"].tolist()
+
+    # Calculer des statistiques pour le résumé
+    num_restaurants = restaurants.shape[0]
+    num_reviews = restaurants["real_reviews_count"].sum()
+    avg_rating = restaurants["overall_rating"].mean()
+    avg_reviews_per_restaurant = restaurants["real_reviews_count"].mean()
+
+    # Résumé des informations
+    st.markdown("## 🌟 Vue globale des Restaurants")
+
+    st.markdown("### 📝 Résumé")
+    st.write(f"- **Nombre total de restaurants disponibles** : {num_restaurants}")
+    st.write(f"- **Nombre total d'avis enregistrés** : {num_reviews}")
+    st.write(f"- **Note moyenne globale** : {avg_rating:.2f}")
+    st.write(f"- **Nombre moyen d'avis par restaurant** : {avg_reviews_per_restaurant:.2f}")
+    st.write(f"- **Période des avis** : de {min_date} à {max_date}")
+
+     # Graphiques globaux
+    st.markdown("### 📊 Graphiques Globaux")
+
+    # Distribution des notes
+    fig_rating_distribution = px.histogram(
+        restaurants,
+        x="overall_rating",
+        nbins=10,
+        title="Distribution des Notes des Restaurants",
+        labels={"overall_rating": "Note Globale"},
+        color_discrete_sequence=["#4C78A8"]
+    )
+    st.plotly_chart(fig_rating_distribution, use_container_width=True)
+
+    # Distribution des avis
+    fig_reviews_distribution = px.histogram(
+        restaurants,
+        x="real_reviews_count",
+        nbins=15,
+        title="Distribution du Nombre d'Avis par Restaurant",
+        labels={"real_reviews_count": "Nombre d'Avis"},
+        color_discrete_sequence=["#F58518"]
+    )
+    st.plotly_chart(fig_reviews_distribution, use_container_width=True)
+
+    # Top 10 des restaurants avec le plus d'avis
+    top_10_reviews = restaurants.nlargest(10, "real_reviews_count")
+    fig_top_10_reviews = px.bar(
+        top_10_reviews,
+        x="name",
+        y="real_reviews_count",
+        title="Top 10 des Restaurants par Nombre d'Avis",
+        labels={"name": "Restaurant", "real_reviews_count": "Nombre d'Avis"},
+        color="real_reviews_count",
+        color_continuous_scale="Viridis"
+    )
+    fig_top_10_reviews.update_xaxes(tickangle=45)
+    st.plotly_chart(fig_top_10_reviews, use_container_width=True)
     # Section des filtres
-    st.markdown("### 🎛️ Filtres et Options")
+    st.markdown("### 🎛️ Filtres et Tableau")
 
     col1, col2, col3 = st.columns(3)
 

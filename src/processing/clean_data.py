@@ -77,7 +77,7 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
         "total_restaurants": "total_restaurants",
         "Cuisine": "cuisine_rating",
         "Service": "service_rating",
-        "Rapport qualité-prix": "value_rating",
+        "Rapport qualité-prix": "qualite_prix_rating",
         "Ambiance": "ambiance_rating",
         "FOURCHETTE DE PRIX": "price_range",
         "CUISINES": "cuisines",
@@ -96,7 +96,7 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
                 processed_restaurant[new_key] = convert_price_range(value)
             elif new_key == "overall_rating" and isinstance(value, str):
                 processed_restaurant[new_key] = float(value.replace(",", "."))
-            elif new_key in ["cuisine_rating", "service_rating", "value_rating", "ambiance_rating"]:
+            elif new_key in ["cuisine_rating", "service_rating", "qualite_prix_rating", "ambiance_rating"]:
                 processed_restaurant[new_key] = float(value) if value is not None else None
             elif new_key in ["reviews_count", "ranking", "total_restaurants"]:
                 processed_restaurant[new_key] = int(value) if value is not None else None
