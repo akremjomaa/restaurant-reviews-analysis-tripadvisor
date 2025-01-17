@@ -8,3 +8,5 @@ plotly
 streamlit-option-menu
 pandas
 streamlit-aggrid
+folium
+streamlit-folium
