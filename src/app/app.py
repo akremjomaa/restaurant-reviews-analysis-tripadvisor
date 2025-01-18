@@ -1,9 +1,7 @@
 import streamlit as st
 import subprocess
 import sys
-from pathlib import Path
-
-from add_restaurant import add_restaurant_interface
+from add_restaurant_interface import add_restaurant_interface
 from map_interface import map_interface
 from analyze_reviews import analyze_reviews_interface
 from explore_restaurants import explore_restaurants_interface

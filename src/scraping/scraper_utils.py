@@ -207,8 +207,6 @@ def scrape_reviews(base_url):
     return reviews_data
 
 
-
-
 def scrape_restaurant(url):
     """
     Scrape les informations détaillées d'un restaurant sur TripAdvisor.
@@ -223,27 +221,25 @@ def scrape_restaurant(url):
             return None
 
         # Extraction des données principales
-        name = soup.select_one('h1.biGQs._P.egaXP.rRtyp')
-        #name = soup.select_one('h1.biGQs._P.hzzSG.rRtyp')
-        #address = soup.select_one("span.bTeln > button > span.biGQs._P.ttuOS > div.biGQs._P.pZUbB.hmDzD")
-        
-        #address = soup.select_one('div.biGQs._P.fiohW.fOtGX')
 
-        
+        name = soup.select_one('h1.biGQs._P.hzzSG.rRtyp')
         address = soup.select_one('span[data-automation="restaurantsMapLinkOnName"]')
-       
-        reviews_count = soup.select_one('span.biGQs._P.fiohW.oXJmt')
-        #reviews_count = soup.select_one('span.OFtgC')
-        rating = soup.select_one('span.biGQs._P.fiohW.uuBRH')
-        ranking_section = soup.select_one('span.biGQs._P.pZUbB.hmDzD')
+        reviews_count_tag  = soup.select_one('span.OFtgC')
+        rating_svg = soup.select_one('svg.UctUV[aria-labelledby]')
+        rating = None
+        if rating_svg:
+            title = rating_svg.find('title')
+        if title and "sur 5" in title.text:
+            rating = float(title.text.split(" sur 5")[0].replace(",", "."))
+
+        ranking_section = soup.select_one('span.ffHqI')
 
         name = name.text.strip() if name else None
         address = address.text.strip() if address else None
-        rating = rating.text.strip() if rating else None
 
-        if reviews_count:
-            reviews_count = reviews_count.text.replace("avis", "").strip()
-            reviews_count = int(reviews_count.replace("\u202f", "").replace(",", "")) 
+        if reviews_count_tag:
+            reviews_count = int(reviews_count_tag.text.replace("avis", "").replace("\u202f", "").replace(",", "").strip())
+
         else :
             reviews_count = None
         if ranking_section:
@@ -261,11 +257,6 @@ def scrape_restaurant(url):
         else:
             ranking = None
             total_restaurants = None
-        print(name)
-        print(address)
-        print(reviews_count)
-        print(rating)
-        print(ranking)
          # Vérification des données critiques et nouvelle tentative si nécessaire
         if not (name and address and reviews_count and rating and ranking):
             logger.warning("Données incomplètes, nouvelle tentative après pause.")

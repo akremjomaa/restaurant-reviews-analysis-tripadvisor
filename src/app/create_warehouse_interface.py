@@ -3,6 +3,8 @@ import sqlite3
 import streamlit as st
 import subprocess
 
+from app.utils import get_db_connection
+
 
 def database_exists(db_path="restaurants.db"):
     """
@@ -13,7 +15,7 @@ def database_exists(db_path="restaurants.db"):
     if not os.path.exists(db_path):
         return False
     try:
-        conn = sqlite3.connect(db_path)
+        conn = get_db_connection(db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1;")
         exists = cursor.fetchone() is not None

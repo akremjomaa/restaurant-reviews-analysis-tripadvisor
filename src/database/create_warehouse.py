@@ -180,5 +180,5 @@ def main(json_filepath, sqlite_db_filepath):
 
 if __name__ == "__main__":
     json_filepath = "data/processed/top_restaurants_processed.json"
-    sqlite_db_filepath = "restaurants.db"
+    sqlite_db_filepath = "src/app/restaurants.db"
     main(json_filepath, sqlite_db_filepath)

@@ -1,10 +1,11 @@
 import sqlite3
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
-import json
 import logging
 import time
 from database.add_restaurant_to_db import add_restaurant_to_wr  
+from typing import List, Dict
+
 
 # Initialisation du géolocalisateur
 geolocator = Nominatim(user_agent="restaurant_locator")
@@ -53,6 +54,27 @@ def get_coordinates(address: str, name: str) -> dict:
     logger.error(f"Impossible d'obtenir les coordonnées pour : Adresse='{address}', Nom='{name}'")
     return {"latitude": None, "longitude": None}
 
+def convert_reviews(reviews: List[Dict]) -> List[Dict]:
+    """
+    Convertir les types des données des avis et standardiser les formats.
+    :param reviews: Liste des avis bruts.
+    :return: Liste des avis traités.
+    """
+    for review in reviews:
+        try:
+            review["contributions"] = int(review.get("contributions", 0))
+            review["rating"] = float(review.get("rating", 0))
+
+            # Gestion et formatage de la date de l'avis
+            raw_date = review.get("review_date", "")
+            review["review_date"] = (
+                raw_date.replace("Rédigé le ", "").strip()
+                if "Rédigé le" in raw_date
+                else raw_date.strip()
+            )
+        except Exception as e:
+            logger.error(f"Erreur lors du traitement d'un avis : {e}")
+    return reviews
 
 def preprocess_single_restaurant(restaurant: dict) -> dict:
     """
@@ -61,6 +83,7 @@ def preprocess_single_restaurant(restaurant: dict) -> dict:
     :return: Dictionnaire nettoyé et structuré.
     """
     logger.info(f"Prétraitement des données pour {restaurant.get('name', 'Nom inconnu')}.")
+
     def convert_price_range(price_range: str) -> str:
         try:
             return price_range.replace("\u202f", "").replace(",", ".").replace("€", "").strip()
@@ -99,13 +122,14 @@ def preprocess_single_restaurant(restaurant: dict) -> dict:
                 processed_restaurant[new_key] = float(value) if value is not None else None
             elif new_key in ["reviews_count", "ranking", "total_restaurants"]:
                 processed_restaurant[new_key] = int(value) if value is not None else None
+            elif new_key == "reviews":
+                processed_restaurant[new_key] = convert_reviews(value)  # Appel à la fonction
             else:
                 processed_restaurant[new_key] = value
         except Exception as e:
             logger.warning(f"Erreur lors du traitement de la clé {key} avec la valeur {value} : {e}")
 
     return processed_restaurant
-
 
 
 def split_address(restaurant: dict) -> dict:
