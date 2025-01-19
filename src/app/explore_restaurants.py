@@ -3,7 +3,7 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder, DataReturnMode
 import plotly.express as px
 import sqlite3
-
+import dateparser
 
 def explore_restaurants_interface(connection):
     """
@@ -75,7 +75,147 @@ def explore_restaurants_interface(connection):
 
         # Graphiques globaux
         st.markdown("### 📊 Graphiques Globaux")
+      
+        # Titre de l'application
+        st.title("Analyse temporelle des notes des restaurants")
+###Debut graphe 1
+        # Chargement des données
+        query = """
+        SELECT 
+            r.id_restaurant, 
+            r.name AS restaurant_name, 
+            rv.rating, 
+            rv.review_date
+        FROM reviews rv
+        JOIN restaurants r ON r.id_restaurant = rv.id_restaurant;
+        """
+        data = pd.read_sql_query(query, connection)
 
+        # Conversion des dates
+        def convert_dates(date_str):
+            if pd.isna(date_str):
+                return None
+            return dateparser.parse(date_str, languages=['fr'])
+
+        data['review_date_converted'] = data['review_date'].apply(convert_dates)
+        data['period'] = data['review_date_converted'].dt.to_period("1Y")  # Groupement par période de 1 an
+
+        # Calcul des notes moyennes globales par période
+        global_grouped = (
+            data.groupby('period')['rating']
+            .mean()
+            .reset_index()
+            .rename(columns={'rating': 'average_rating'})
+        )
+        global_grouped['period'] = global_grouped['period'].astype(str)
+        global_grouped['period'] = pd.to_datetime(global_grouped['period'].str.split('-').str[0])
+
+        # Affichage des données brutes globales (optionnel)
+        #st.write("Données agrégées par période de 1 an (globales) :")
+        #st.dataframe(global_grouped)
+
+        # Option pour filtrer les données par restaurant
+        restaurant_names = data['restaurant_name'].unique()
+        selected_restaurant = st.selectbox("Sélectionnez un restaurant pour une analyse détaillée :", options=["Tous"] + list(restaurant_names))
+
+        # Initialisation de la figure
+        fig = px.line(
+            global_grouped,
+            x='period',
+            y='average_rating',
+            title="Évolution des notes moyennes des restaurants",
+            labels={'period': 'Période', 'average_rating': 'Note Moyenne'},
+            markers=True
+        )
+
+        # Ajout des données filtrées au graphique
+        if selected_restaurant != "Tous":
+            filtered_data = data[data['restaurant_name'] == selected_restaurant]
+            filtered_grouped = (
+                filtered_data.groupby('period')['rating']
+                .mean()
+                .reset_index()
+                .rename(columns={'rating': 'average_rating'})
+            )
+            filtered_grouped['period'] = filtered_grouped['period'].astype(str)
+            filtered_grouped['period'] = pd.to_datetime(filtered_grouped['period'].str.split('-').str[0])
+            
+            # Ajout de la courbe du restaurant spécifique
+            fig.add_scatter(
+                x=filtered_grouped['period'],
+                y=filtered_grouped['average_rating'],
+                mode='lines+markers',
+                name=selected_restaurant
+            )
+
+        # Affichage du graphique
+        st.plotly_chart(fig)
+
+####Fin graphe 1
+
+        # Option de sélection pour l'axe d'analyse
+        analysis_axis = st.selectbox(
+            "Sélectionnez l'axe d'analyse :",
+            ["Type de Cuisine", "Régime Spécial", "Gamme de Prix"]
+        )
+
+        # Charger les données supplémentaires pour les caractéristiques des restaurants
+        query_features = """
+        SELECT 
+            r.id_restaurant, r.overall_rating, c.name AS cuisine_name, d.name AS special_diet_name, r.price_range
+        FROM restaurants r
+        LEFT JOIN restaurant_cuisines rc ON r.id_restaurant = rc.id_restaurant
+        LEFT JOIN cuisines c ON rc.id_cuisine = c.id_cuisine
+        LEFT JOIN restaurant_special_diets rsd ON r.id_restaurant = rsd.id_restaurant
+        LEFT JOIN special_diets d ON rsd.id_special_diet = d.id_special_diet
+        """
+        features = pd.read_sql_query(query_features, connection)
+
+        # Préparation des données en fonction de l'axe d'analyse
+        if analysis_axis == "Type de Cuisine":
+            grouped_data = (
+                features.groupby("cuisine_name")["overall_rating"]
+                .mean()
+                .reset_index()
+                .rename(columns={"cuisine_name": "Catégorie", "overall_rating": "Note Moyenne"})
+                .sort_values(by="Note Moyenne", ascending=False)
+            )
+            title = "Notes moyennes par type de cuisine"
+            x_label = "Type de Cuisine"
+
+        elif analysis_axis == "Régime Spécial":
+            grouped_data = (
+                features.groupby("special_diet_name")["overall_rating"]
+                .mean()
+                .reset_index()
+                .rename(columns={"special_diet_name": "Catégorie", "overall_rating": "Note Moyenne"})
+                .sort_values(by="Note Moyenne", ascending=False)
+            )
+            title = "Notes moyennes par régime spécial"
+            x_label = "Régime Spécial"
+
+        elif analysis_axis == "Gamme de Prix":
+            grouped_data = (
+                features.groupby("price_range")["overall_rating"]
+                .mean()
+                .reset_index()
+                .rename(columns={"price_range": "Catégorie", "overall_rating": "Note Moyenne"})
+                .sort_values(by="Note Moyenne", ascending=False)
+            )
+            title = "Notes moyennes par gamme de prix"
+            x_label = "Gamme de Prix"
+
+        # Création du graphique interactif
+        fig = px.bar(
+            grouped_data,
+            x="Catégorie",
+            y="Note Moyenne",
+            title=title,
+            labels={"Catégorie": x_label, "Note Moyenne": "Note Moyenne"},
+            text="Note Moyenne"
+        )
+
+        st.plotly_chart(fig)
         fig_rating_distribution = px.histogram(
             restaurants,
             x="overall_rating",
@@ -168,6 +308,5 @@ def explore_restaurants_interface(connection):
             file_name="data/processed/filtered_restaurants.csv",
             mime="text/csv"
         )
-
     except sqlite3.Error as e:
         st.error(f"Erreur lors de l'accès à la base de données : {e}")

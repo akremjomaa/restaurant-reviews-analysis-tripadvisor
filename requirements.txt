@@ -12,3 +12,4 @@ folium
 streamlit-folium
 mistralai
 python-dotenv
+dateparser
