@@ -6,7 +6,7 @@ import subprocess
 from app.utils import get_db_connection
 
 
-def database_exists(db_path="restaurants.db"):
+def database_exists(db_path="src/database/restaurants.db"):
     """
     Vérifie si la base de données SQLite existe et contient des tables.
     :param db_path: Chemin vers le fichier SQLite.

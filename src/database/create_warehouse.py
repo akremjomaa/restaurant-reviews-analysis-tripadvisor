@@ -175,10 +175,9 @@ def main(json_filepath, sqlite_db_filepath):
 
     conn.commit()
     conn.close()
-    print("Données insérées avec succès dans la base de données SQLite.")
 
 
 if __name__ == "__main__":
     json_filepath = "data/processed/top_restaurants_processed.json"
-    sqlite_db_filepath = "src/app/restaurants.db"
+    sqlite_db_filepath = "src/database/restaurants.db"
     main(json_filepath, sqlite_db_filepath)

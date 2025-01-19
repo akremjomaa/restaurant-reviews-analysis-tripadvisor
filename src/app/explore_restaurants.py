@@ -165,7 +165,7 @@ def explore_restaurants_interface(connection):
         st.download_button(
             label="Télécharger les Données Filtrées",
             data=csv_data,
-            file_name="filtered_restaurants.csv",
+            file_name="data/processed/filtered_restaurants.csv",
             mime="text/csv"
         )
 

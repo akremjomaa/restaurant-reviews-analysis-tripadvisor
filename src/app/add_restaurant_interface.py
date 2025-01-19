@@ -19,7 +19,7 @@ def load_restaurant_data(file_path="restaurants_data.json"):
     except FileNotFoundError:
         return []
     
-def check_restaurant_exists(name: str, db_path="restaurants.db") -> bool:
+def check_restaurant_exists(name: str, db_path="src/database/restaurants.db") -> bool:
     """
     Vérifie si un restaurant existe déjà dans la base de données.
     :param name: Nom du restaurant à vérifier.

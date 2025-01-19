@@ -352,4 +352,3 @@ def scrape_restaurant_list(base_url, max_restaurants=15, min_reviews=900):
 
     logger.info(f"Scraping terminé. {len(restaurant_urls)} restaurants trouvés.")
     return restaurant_urls
-

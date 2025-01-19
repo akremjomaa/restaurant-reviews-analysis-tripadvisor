@@ -80,7 +80,7 @@ def navbar_vertical():
             index=0,
         )
         st.markdown("---")
-        st.caption("Développé pour analyser les avis des restaurants lyonnais.")
+        st.caption("Développé pour analyser les restaurants lyonnais.")
     return menu
 
 
@@ -115,9 +115,9 @@ def main():
         col1, col2, col3 = st.columns([0.5, 4, 1])
         with col2:
             scraping_section()
-            st.markdown("<br>", unsafe_allow_html=True)  # Espace après le scraping
+            st.markdown("<br>", unsafe_allow_html=True)  
             cleaning_section()
-            st.markdown("<br>", unsafe_allow_html=True)  # Espace après le nettoyage
+            st.markdown("<br>", unsafe_allow_html=True) 
             warehouse_section()
 
     elif menu == "Explorer les Restaurants":
