@@ -25,7 +25,7 @@ def get_coordinates(address: str, name: str) -> Dict[str, float]:
                 return {"latitude": location.latitude, "longitude": location.longitude}
 
             # Si l'adresse échoue, tenter avec le nom du restaurant
-            print(f"Adresse échouée, tentative avec le nom du restaurant : {name}")
+            print(f"Échec de récupération des coordonnées du restaurant à partir de l'adresse. Nouvelle tentative en utilisant le nom du restaurant : {name}")
             location = geolocator.geocode(name, timeout=10)
             if location:
                 return {"latitude": location.latitude, "longitude": location.longitude}

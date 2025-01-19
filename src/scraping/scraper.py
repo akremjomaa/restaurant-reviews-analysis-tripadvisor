@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import time
 import random
-from utils import scrape_restaurant_list, scrape_restaurant
+from scraping.scraper_utils import scrape_restaurant_list, scrape_restaurant
 
 def save_urls_to_json(urls, filename):
     """
@@ -48,7 +48,6 @@ def main():
     # Scraper les URLs des restaurants
     print("Début du scraping des URLs des restaurants...")
     restaurant_urls = scrape_restaurant_list(base_url)
-    save_urls_to_json(restaurant_urls,urls_file)  # Sauvegarde des URLs
 
     # Scraper les détails des restaurants
     print("Début du scraping des informations des restaurants...")
@@ -61,7 +60,8 @@ def main():
         time.sleep(random.uniform(3, 7)) 
 
     # Sauvegarde des données
-    save_to_json(all_restaurants_data, data_file)
+    if (save_to_json(all_restaurants_data, data_file)):
+        save_urls_to_json(restaurant_urls,urls_file)
 
 if __name__ == "__main__":
     main()
