@@ -13,6 +13,7 @@ streamlit-aggrid
 streamlit-folium
 mistralai
 python-dotenv
+dateparser
 nltk
 scikit-learn
 app.utils
