@@ -165,7 +165,6 @@ def explore_restaurants_interface(connection):
                 return "Été"
             elif month in [9, 10, 11]:
                 return "Automne"
-
         data['season'] = data['review_date_converted'].apply(determine_season)
 
         # Liste déroulante pour sélectionner un restaurant

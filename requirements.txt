@@ -3,7 +3,6 @@ beautifulsoup4
 requests
 lxml
 geopy
-logging
 folium
 streamlit
 plotly
