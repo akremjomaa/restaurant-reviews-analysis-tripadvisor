@@ -12,3 +12,7 @@ folium
 streamlit-folium
 mistralai
 python-dotenv
+nltk
+re
+scikit-learn
+app.utils
