@@ -1,55 +1,56 @@
-import json
 from typing import List, Dict
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
 import time
 
-# Initialisation du géolocalisateur
+from processing.processing_utils import load_json , save_json
+
+# Initialisation du géolocalisateur Nominatim avec un identifiant utilisateur
 geolocator = Nominatim(user_agent="restaurant_locator")
 
 def get_coordinates(address: str, name: str) -> Dict[str, float]:
     """
-    Obtenir les coordonnées GPS d'une adresse. Si l'adresse échoue, tente avec le nom du restaurant.
-    :param address: Adresse complète.
+    Obtenir les coordonnées GPS d'une adresse. Si l'adresse échoue, tenter avec le nom du restaurant.
+    :param address: Adresse complète du restaurant.
     :param name: Nom du restaurant.
     :return: Dictionnaire contenant latitude et longitude.
     """
-    retries = 3  # Nombre de tentatives
-    delay = 2  # Délai initial entre les tentatives
+    retries = 3  # Nombre de tentatives autorisées
+    delay = 2  # Délai initial entre les tentatives en secondes
 
     for attempt in range(retries):
         try:
-            # Essayer avec l'adresse
+            # Essayer de récupérer les coordonnées via l'adresse
             location = geolocator.geocode(address, timeout=10)
             if location:
                 return {"latitude": location.latitude, "longitude": location.longitude}
 
-            # Si l'adresse échoue, tenter avec le nom du restaurant
-            print(f"Échec de récupération des coordonnées du restaurant à partir de l'adresse. Nouvelle tentative en utilisant le nom du restaurant : {name}")
+            # Si échec, tenter avec le nom du restaurant
+            print(f"Échec avec l'adresse. Tentative avec le nom du restaurant : {name}")
             location = geolocator.geocode(name, timeout=10)
             if location:
                 return {"latitude": location.latitude, "longitude": location.longitude}
 
         except GeopyError as e:
             print(f"Tentative {attempt + 1}/{retries} échouée : {e}")
-            time.sleep(delay)
-            delay *= 2  # Double le délai entre les tentatives
+            time.sleep(delay)  # Attendre avant une nouvelle tentative
+            delay *= 2  # Doubler le délai entre les tentatives
 
-    # Si toutes les tentatives échouent
-    print(f"Échec pour l'adresse : {address} et le nom : {name}. Aucune coordonnée trouvée.")
+    # Retourner des coordonnées nulles si toutes les tentatives échouent
+    print(f"Impossible d'obtenir les coordonnées pour : {address} ou {name}.")
     return {"latitude": None, "longitude": None}
 
 def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
     """
-    Prétraiter les données des restaurants pour ajuster les noms des attributs et les types.
-    :param data: Liste des dictionnaires représentant les données des restaurants.
-    :return: Liste des dictionnaires avec les attributs et types normalisés.
+    Prétraite les données des restaurants pour normaliser les noms des attributs et leurs types.
+    :param data: Liste des dictionnaires représentant les restaurants.
+    :return: Liste des dictionnaires normalisés.
     """
     def convert_price_range(price_range: str) -> str:
         """
-        Convertir une fourchette de prix en une chaîne normalisée.
-        :param price_range: Chaîne brute de la fourchette de prix.
-        :return: Chaîne de prix normalisée.
+        Convertit une fourchette de prix brute en une chaîne normalisée.
+        :param price_range: Texte brut de la fourchette de prix.
+        :return: Texte normalisé.
         """
         try:
             return price_range.replace("\u202f", "").replace(",", ".").replace("€", "").strip()
@@ -58,9 +59,9 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
 
     def convert_reviews(reviews: List[Dict]) -> List[Dict]:
         """
-        Convertir les types des données des avis et standardiser les formats.
-        :param reviews: Liste des avis bruts.
-        :return: Liste des avis traités.
+        Convertit les données brutes des avis en formats normalisés.
+        :param reviews: Liste d'avis bruts.
+        :return: Liste d'avis normalisés.
         """
         for review in reviews:
             review["contributions"] = int(review.get("contributions", 0))
@@ -68,6 +69,7 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
             review["review_date"] = review.get("review_date", "").replace("Rédigé le ", "").strip()
         return reviews
 
+    # Mapping pour normaliser les noms des attributs
     attribute_mapping = {
         "name": "name",
         "address": "address",
@@ -110,9 +112,9 @@ def preprocess_restaurant_data(data: List[Dict]) -> List[Dict]:
 
 def add_coordinates_to_restaurants(restaurants: List[Dict]) -> List[Dict]:
     """
-    Ajoute les coordonnées GPS aux données des restaurants.
-    :param restaurants: Liste de dictionnaires représentant les restaurants.
-    :return: Liste de restaurants avec coordonnées ajoutées.
+    Ajoute les coordonnées GPS à chaque restaurant.
+    :param restaurants: Liste des restaurants.
+    :return: Liste mise à jour avec les coordonnées.
     """
     for restaurant in restaurants:
         address = restaurant.get("address", "")
@@ -124,12 +126,11 @@ def add_coordinates_to_restaurants(restaurants: List[Dict]) -> List[Dict]:
 
     return restaurants
 
-def split_address(data):
+def split_address(data: List[Dict]) -> List[Dict]:
     """
-    Divise le champ 'address' d'une liste de dictionnaires en 'street', 'postal_code', 'city', et 'country'.
-    
-    :param data: Liste de dictionnaires contenant un champ 'address'.
-    :return: Liste de dictionnaires mise à jour.
+    Divise le champ 'address' en sous-champs : 'street', 'postal_code', 'city', et 'country'.
+    :param data: Liste des restaurants.
+    :return: Liste mise à jour avec des champs d'adresse séparés.
     """
     for item in data:
         try:
@@ -141,18 +142,16 @@ def split_address(data):
             item['city'] = city.strip()
             item['country'] = country.strip()
         except ValueError:
-            item['street'] = item['address']
+            item['street'] = item.get('address')
             item['postal_code'] = None
             item['city'] = None
             item['country'] = None
-        del item['address']  # Supprime le champ 'address' original
+        item.pop('address', None)  # Supprimer le champ d'adresse original
     return data
-
 
 # Lecture des données brutes depuis le fichier JSON
 
-with open("data/raw/top_restaurants.json", "r", encoding="utf-8") as file:
-    raw_data = json.load(file)
+raw_data = load_json("data/raw/top_restaurants.json")
 
 # Prétraitement des données
 processed_data = preprocess_restaurant_data(raw_data)
@@ -164,5 +163,6 @@ restaurants_with_coordinates = add_coordinates_to_restaurants(processed_data)
 restaurants_final = split_address(restaurants_with_coordinates)
 
 # Sauvegarde des données prétraitées dans un fichier JSON
-with open("data/processed/top_restaurants_processed.json", "w", encoding="utf-8") as file:
-    json.dump(restaurants_final, file, ensure_ascii=False, indent=4)
+
+save_json(restaurants_final, "data/processed/top_restaurants_processed.json")
+

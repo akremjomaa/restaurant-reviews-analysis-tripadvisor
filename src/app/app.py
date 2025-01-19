@@ -5,6 +5,7 @@ from add_restaurant_interface import add_restaurant_interface
 from map_interface import map_interface
 from analyze_reviews import analyze_reviews_interface
 from explore_restaurants import explore_restaurants_interface
+from nlp_analysis import nlp_analysis_interface
 from utils import get_db_connection
 
 
@@ -76,7 +77,7 @@ def navbar_vertical():
         st.markdown("---")
         menu = st.radio(
             "Menu",
-            ["Accueil", "Explorer les Restaurants", "Analyse des Avis", "Carte Interactive", "Ajouter un restaurant"],
+            ["Accueil", "Explorer les Restaurants", "Analyse des Avis", "Analyse NLP", "Carte Interactive", "Ajouter un restaurant"],
             index=0,
         )
         st.markdown("---")
@@ -95,7 +96,7 @@ def main():
     menu = navbar_vertical()  # Charger la navbar
 
     connection = None
-    if menu in ["Explorer les Restaurants", "Analyse des Avis", "Carte Interactive"]:
+    if menu in ["Explorer les Restaurants", "Analyse des Avis", "Analyse NLP", "Carte Interactive"]:
         try:
             connection = get_db_connection()
         except Exception:
@@ -125,6 +126,9 @@ def main():
 
     elif menu == "Analyse des Avis":
         analyze_reviews_interface(connection)
+
+    elif menu == "Analyse NLP":
+        nlp_analysis_interface(connection)
 
     elif menu == "Carte Interactive":
         map_interface(connection)
