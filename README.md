@@ -8,7 +8,7 @@
 - [Configuration](#configuration)
 - [Description des fonctionnalités de l'application](#description-des-fonctionnalités-de-lapplication)
 - [Contribution](#contribution)
-- [Authors](#authors)  
+- [Authors](#auteurs)  
 
 ---
 
