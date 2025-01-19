@@ -10,3 +10,5 @@ pandas
 streamlit-aggrid
 folium
 streamlit-folium
+mistralai
+python-dotenv
