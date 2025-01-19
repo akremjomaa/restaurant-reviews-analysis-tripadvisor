@@ -3,12 +3,14 @@ beautifulsoup4
 requests
 lxml
 geopy
+logging
+sqlite3
+folium
 streamlit
 plotly
 streamlit-option-menu
 pandas
 streamlit-aggrid
-folium
 streamlit-folium
 mistralai
 python-dotenv

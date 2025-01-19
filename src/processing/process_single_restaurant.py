@@ -1,8 +1,6 @@
 import sqlite3
 from geopy.geocoders import Nominatim
-from geopy.exc import GeopyError
 import logging
-import time
 from processing.clean_data import get_coordinates
 from database.add_restaurant_to_db import add_restaurant_to_wr  
 from typing import List, Dict
@@ -22,38 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
-# def get_coordinates(address: str, name: str) -> dict:
-#     """
-#     Obtenir les coordonnées GPS d'une adresse. Si l'adresse échoue, tente avec le nom du restaurant.
-#     :param address: Adresse complète.
-#     :param name: Nom du restaurant.
-#     :return: Dictionnaire contenant latitude et longitude.
-#     """
-#     retries = 3  # Nombre de tentatives
-#     delay = 2  # Délai initial entre les tentatives
-
-#     for attempt in range(retries):
-#         try:
-#             # Essayer avec l'adresse
-#             location = geolocator.geocode(address, timeout=10)
-#             if location:
-#                 return {"latitude": location.latitude, "longitude": location.longitude}
-
-#             # Si l'adresse échoue, tenter avec le nom du restaurant
-#             logger.warning(f"Tentative {attempt + 1}/{retries} échouée avec l'adresse. Tentative avec le nom : {name}")
-#             location = geolocator.geocode(name, timeout=10)
-#             if location:
-#                 return {"latitude": location.latitude, "longitude": location.longitude}
-
-#         except GeopyError as e:
-#             logger.error(f"Erreur lors de la géolocalisation (Tentative {attempt + 1}/{retries}) : {e}")
-#             time.sleep(delay)
-#             delay *= 2  # Double le délai entre les tentatives
-
-#     # Si toutes les tentatives échouent
-#     logger.error(f"Impossible d'obtenir les coordonnées pour : Adresse='{address}', Nom='{name}'")
-#     return {"latitude": None, "longitude": None}
 
 def convert_reviews(reviews: List[Dict]) -> List[Dict]:
     """

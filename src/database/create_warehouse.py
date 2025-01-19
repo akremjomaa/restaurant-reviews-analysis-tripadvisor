@@ -3,13 +3,21 @@ import sqlite3
 
 
 def load_json(filepath):
-    """Charge le fichier JSON."""
+    """
+    Charge un fichier JSON et retourne son contenu.
+    :param filepath: Chemin du fichier JSON.
+    :return: Contenu du fichier JSON sous forme de dictionnaire ou liste.
+    """
     with open(filepath, 'r', encoding='utf-8') as file:
         return json.load(file)
 
 
 def create_tables(cursor):
-    """Crée les tables SQLite avec des contraintes pour éviter les doublons."""
+    """
+    Crée les tables SQLite nécessaires pour stocker les données des restaurants,
+    en incluant les relations many-to-many et des contraintes pour éviter les doublons.
+    :param cursor: Curseur SQLite pour exécuter les commandes SQL.
+    """
     # Table principale pour les restaurants
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS restaurants (
@@ -34,7 +42,7 @@ def create_tables(cursor):
     );
     ''')
 
-    # Tables pour les cuisines, régimes spéciaux, fonctionnalités et repas
+    # Tables annexes pour les données catégoriques
     for table in ["cuisines", "special_diets", "features", "meals"]:
         cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {table} (
@@ -79,21 +87,32 @@ def create_tables(cursor):
 
 
 def insert_many_to_many_data(cursor, restaurant_id, items, table_name, id_column_name, reference_table):
-    """Insère des relations many-to-many entre restaurants et items."""
+    """
+    Insère les relations many-to-many entre les restaurants et leurs catégories associées.
+    :param cursor: Curseur SQLite.
+    :param restaurant_id: ID du restaurant concerné.
+    :param items: Liste des items à associer (exemple : cuisines, régimes spéciaux).
+    :param table_name: Nom de la table de jointure.
+    :param id_column_name: Nom de la colonne ID dans la table de référence.
+    :param reference_table: Table de référence contenant les items.
+    """
     for item in items:
         item = item.strip() if isinstance(item, str) else None
         if not item:
             continue
 
+        # Vérifie si l'item existe déjà dans la table de référence
         cursor.execute(f"SELECT {id_column_name} FROM {reference_table} WHERE name = ?", (item,))
         row = cursor.fetchone()
 
         if row is None:
+            # Ajoute l'item à la table de référence
             cursor.execute(f"INSERT INTO {reference_table} (name) VALUES (?)", (item,))
             reference_id = cursor.lastrowid
         else:
             reference_id = row[0]
 
+        # Insère la relation dans la table de jointure
         cursor.execute(f'''
         INSERT OR IGNORE INTO {table_name} (id_restaurant, {id_column_name})
         VALUES (?, ?);
@@ -101,8 +120,13 @@ def insert_many_to_many_data(cursor, restaurant_id, items, table_name, id_column
 
 
 def insert_data(cursor, data):
-    """Insère les données JSON dans les tables SQLite."""
+    """
+    Insère les données JSON dans les tables SQLite, en gérant les relations many-to-many.
+    :param cursor: Curseur SQLite.
+    :param data: Données des restaurants sous forme de liste de dictionnaires.
+    """
     for restaurant in data:
+        # Prépare les données principales des restaurants
         restaurant_data = (
             restaurant.get('name'),
             restaurant.get('street'),
@@ -129,12 +153,15 @@ def insert_data(cursor, data):
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         ''', restaurant_data)
 
+        # Récupère l'ID du restaurant nouvellement inséré
         id_restaurant = cursor.lastrowid
         if not id_restaurant:
+            # Recherche l'ID existant si le restaurant est déjà présent
             cursor.execute("SELECT id_restaurant FROM restaurants WHERE name = ? AND street = ? AND city = ?", 
                            (restaurant.get('name'), restaurant.get('street'), restaurant.get('city')))
             id_restaurant = cursor.fetchone()[0]
 
+        # Insère les relations many-to-many
         insert_many_to_many_data(cursor, id_restaurant, restaurant.get('cuisines', "").split(", "), 
                                  "restaurant_cuisines", "id_cuisine", "cuisines")
         insert_many_to_many_data(cursor, id_restaurant, restaurant.get('special_diets', "").split(", "), 
@@ -144,6 +171,7 @@ def insert_data(cursor, data):
         insert_many_to_many_data(cursor, id_restaurant, restaurant.get('meals', "").split(", "), 
                                  "restaurant_meals", "id_meal", "meals")
 
+        # Insère les avis
         for review in restaurant.get('reviews', []):
             review_data = (
                 review.get('author'),
@@ -164,7 +192,11 @@ def insert_data(cursor, data):
 
 
 def main(json_filepath, sqlite_db_filepath):
-    """Exécute la création des tables et l'insertion des données."""
+    """
+    Point d'entrée principal pour créer les tables SQLite et insérer les données depuis un fichier JSON.
+    :param json_filepath: Chemin du fichier JSON contenant les données des restaurants.
+    :param sqlite_db_filepath: Chemin de la base de données SQLite.
+    """
     data = load_json(json_filepath)
 
     conn = sqlite3.connect(sqlite_db_filepath)
