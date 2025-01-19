@@ -1,0 +1,62 @@
+[
+    {
+        "name": "Cuisine En Ville-restaurant Lyon",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g207360-d9583637-Reviews-Cuisine_En_Ville_restaurant_Lyon-Villeurbanne_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.7697673,
+        "longitude": 4.8631421
+    },
+    {
+        "name": "Les Terrasses de Lyon",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g187265-d3727154-Reviews-Les_Terrasses_de_Lyon-Lyon_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.7628043,
+        "longitude": 4.8257728
+    },
+    {
+        "name": "Frazarin Bistrot Franco Italien",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g187265-d23110895-Reviews-Frazarin-Lyon_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": null,
+        "longitude": null
+    },
+    {
+        "name": "Le Cocon",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g1166685-d3689176-Reviews-Le_Cocon-Saint_Priest_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.9974771,
+        "longitude": 4.5236348
+    },
+    {
+        "name": "Restaurant Paul Bocuse",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g1718093-d719816-Reviews-Restaurant_Paul_Bocuse-Collonges_au_Mont_d_Or_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.8156303,
+        "longitude": 4.8475323
+    },
+    {
+        "name": "Le Bouchon des Filles",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g187265-d1643202-Reviews-Le_Bouchon_Des_Filles-Lyon_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.7686767,
+        "longitude": 4.8293173
+    },
+    {
+        "name": "Le Comptoir Des Cousins",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g187265-d12874430-Reviews-Le_Comptoir_Des_Cousins-Lyon_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.7692731,
+        "longitude": 4.8553394
+    },
+    {
+        "name": "Le Restaurant",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g1166685-d4742875-Reviews-Le_Restaurant-Saint_Priest_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 52.3556536,
+        "longitude": 4.8983333
+    },
+    {
+        "name": "Le P'tit Craponnois",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g2338589-d3777407-Reviews-Le_P_tit_Craponnois-Craponne_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 45.743283,
+        "longitude": 4.7226294
+    },
+    {
+        "name": "Bol d'air",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g207358-d1728920-Reviews-Bol_D_Air-Dardilly_Rhone_Auvergne_Rhone_Alpes.html",
+        "latitude": 50.67849143021384,
+        "longitude": 3.9367212394860456
+    }
+]
