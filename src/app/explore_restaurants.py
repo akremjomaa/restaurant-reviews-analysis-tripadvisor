@@ -110,10 +110,6 @@ def explore_restaurants_interface(connection):
         global_grouped['period'] = global_grouped['period'].astype(str)
         global_grouped['period'] = pd.to_datetime(global_grouped['period'].str.split('-').str[0])
 
-        # Affichage des données brutes globales (optionnel)
-        #st.write("Données agrégées par période de 1 an (globales) :")
-        #st.dataframe(global_grouped)
-
         # Option pour filtrer les données par restaurant
         restaurant_names = data['restaurant_name'].unique()
         selected_restaurant = st.selectbox("Sélectionnez un restaurant pour une analyse détaillée :", options=["Tous"] + list(restaurant_names))
@@ -152,6 +148,60 @@ def explore_restaurants_interface(connection):
         st.plotly_chart(fig)
 
 ####Fin graphe 1
+
+        # Analyse des notes par saison
+        st.title("Analyse des notes par saison")
+
+        # Ajout d'une colonne pour identifier la saison
+        def determine_season(date):
+            if pd.isna(date):
+                return None
+            month = date.month
+            if month in [12, 1, 2]:
+                return "Hiver"
+            elif month in [3, 4, 5]:
+                return "Printemps"
+            elif month in [6, 7, 8]:
+                return "Été"
+            elif month in [9, 10, 11]:
+                return "Automne"
+
+        data['season'] = data['review_date_converted'].apply(determine_season)
+
+        # Liste déroulante pour sélectionner un restaurant
+        season_restaurant = st.selectbox(
+            "Sélectionnez un restaurant pour l'analyse par saison :",
+            options=["Tous"] + list(restaurant_names)
+        )
+
+        # Regroupement des données par saison
+        if season_restaurant == "Tous":
+            season_grouped = (
+                data.groupby('season')['rating']
+                .mean()
+                .reset_index()
+                .rename(columns={'rating': 'average_rating'})
+            )
+        else:
+            filtered_season_data = data[data['restaurant_name'] == season_restaurant]
+            season_grouped = (
+                filtered_season_data.groupby('season')['rating']
+                .mean()
+                .reset_index()
+                .rename(columns={'rating': 'average_rating'})
+            )
+
+        # Création du graphique par saison
+        fig_season = px.bar(
+            season_grouped,
+            x='season',
+            y='average_rating',
+            title=f"Analyse des notes par saison ({season_restaurant})",
+            labels={'season': 'Saison', 'average_rating': 'Note Moyenne'},
+            text='average_rating'
+        )
+
+        st.plotly_chart(fig_season)
 
         # Option de sélection pour l'axe d'analyse
         analysis_axis = st.selectbox(
@@ -216,25 +266,6 @@ def explore_restaurants_interface(connection):
         )
 
         st.plotly_chart(fig)
-        fig_rating_distribution = px.histogram(
-            restaurants,
-            x="overall_rating",
-            nbins=10,
-            title="Distribution des Notes des Restaurants",
-            labels={"overall_rating": "Note Globale"},
-            color_discrete_sequence=["#4C78A8"]
-        )
-        st.plotly_chart(fig_rating_distribution, use_container_width=True)
-
-        fig_reviews_distribution = px.histogram(
-            restaurants,
-            x="real_reviews_count",
-            nbins=15,
-            title="Distribution du Nombre d'Avis par Restaurant",
-            labels={"real_reviews_count": "Nombre d'Avis"},
-            color_discrete_sequence=["#F58518"]
-        )
-        st.plotly_chart(fig_reviews_distribution, use_container_width=True)
 
         # Section des filtres
         st.markdown("### 🎛️ Filtres et Tableau")
