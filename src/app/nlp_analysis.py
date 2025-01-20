@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 import nltk
 import re
 
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 
 # ---- Fonctions Utilitaires ----
