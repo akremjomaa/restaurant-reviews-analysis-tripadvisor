@@ -1,0 +1,18 @@
+# scraping libraries
+beautifulsoup4
+requests
+lxml
+geopy
+folium
+streamlit
+plotly
+streamlit-option-menu
+pandas
+streamlit-aggrid
+streamlit-folium
+mistralai
+python-dotenv
+dateparser
+nltk
+scikit-learn
+app.utils
